@@ -11,10 +11,10 @@ const router = express.Router();
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 465,
-  secure: true, // true for 465, false for other ports
+  secure: true,
   auth: {
-    user: "aakash7536@gmail.com", // Your email
-    pass: "tmcj fbnn lffr cspa", // Your email password or app password
+    user: "aakash7536@gmail.com",
+    pass: "tmcj fbnn lffr cspa",
   },
 });
 
@@ -130,7 +130,7 @@ router.post("/superadminlogin", async (req, res) => {
   }
 });
 
-// Create Manager endpoint
+// Route to create a new manager
 router.post("/managers", async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -152,36 +152,28 @@ router.post("/managers", async (req, res) => {
 
     await newManager.save();
 
-    // Define the deep link for the manager login
-    const managerLoginLink = `sportszz://manager-login?email=${encodeURIComponent(
-      email
-    )}`;
+    // Update login link for development environment using Expo deep link
+    const loginLink = `exp://192.168.0.173:8081/--/manager-login`;
 
-    // Sending the email
+    // Sending the email with credentials
     const mailOptions = {
-      from: '"BCS" <aakash7536@gmail.com>', // Update with your company name and email
-      to: email,
-      subject: "Manager Account Credentials",
-      text: `Dear ${name},\n\nWe are pleased to inform you that you have been added as a Manager in our system.\n\nPlease find your account details below:\n\nEmail: ${email}\nPassword: ${password}\n\nTo log in to your account, please click on the following link:\n${managerLoginLink}\n\nIf you have any questions or need further assistance, feel free to reach out to our support team.\n\nBest regards,\nThe BCS Team`,
-      html: `<p>Dear ${name},</p>
-             <p>We are pleased to inform you that you have been added as a Manager in our system.</p>
-             <p>Please find your account details below:</p>
-             <p><strong>Email:</strong> ${email}<br>
-                <strong>Password:</strong> ${password}</p>
-             <p>To log in to your account, please click on the following link:</p>
-             <p><a href="${managerLoginLink}">Login to your Manager Account</a></p>
-             <p>If you have any questions or need further assistance, feel free to reach out to our support team.</p>
-             <p>Best regards,<br>
-             The BCS Team</p>`,
+      from: process.env.EMAIL_USER,
+      to: email, // Use the email variable defined above
+      subject: "Your Manager Login Link and Credentials",
+      text: `Hello ${name},\n\nYour account has been created as a manager. You can log in using the following credentials:\n\nEmail: ${email}\nPassword: ${password}\n\nClick the link below to log in:\n${loginLink}\n\nThank you,\nSportszz Team`, // Format the email text to include login credentials and the link
     };
 
     // Send the email
     await transporter.sendMail(mailOptions);
 
-    res.status(201).json({ message: "Manager added and email sent!" });
+    res
+      .status(201)
+      .json({ message: "Manager added and email sent with credentials!" });
   } catch (error) {
     console.error("Error adding manager or sending email:", error);
-    res.status(500).json({ error: "An error occurred" });
+    res.status(500).json({
+      error: "An error occurred while adding the manager or sending the email.",
+    });
   }
 });
 
@@ -193,6 +185,41 @@ router.get("/club-admin/managers", async (req, res) => {
   } catch (error) {
     console.error("Error fetching managers:", error); // Log the error
     res.status(500).json({ message: "Error fetching managers", error });
+  }
+});
+
+//Login for manager
+// Login endpoint
+router.post("/manager-login", async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    // Find the manager by email
+    const manager = await Manager.findOne({ email });
+
+    // Check if the manager exists
+    if (!manager) {
+      return res.status(401).json({ message: "Invalid email or password" });
+    }
+
+    // Check if the manager is active
+    if (!manager.isActive) {
+      return res.status(403).json({ message: "Manager is not active" });
+    }
+
+    // Validate the password
+    const isPasswordValid = await bcrypt.compare(password, manager.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: "Invalid email or password" });
+    }
+
+    // Login successful
+    res.status(200).json({
+      message: "Login successful",
+    });
+  } catch (error) {
+    console.error("Error during login:", error);
+    res.status(500).json({ message: "An error occurred during login" });
   }
 });
 

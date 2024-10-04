@@ -68,15 +68,8 @@ const TopMenu = () => {
       setAddManagerVisible(false);
       setManagerDetails({ name: "", email: "", password: "" });
 
-      // Construct deep link for manager login
-      const loginLink = `sportszz://manager-login?email=${encodeURIComponent(
-        managerDetails.email
-      )}`;
-      console.log("Deep link constructed:", loginLink);
-
-      // Note: Don't attempt to open the link here
-      // Simply log the link for reference
-      console.log("Manager added and email sent with deep link:", loginLink);
+      // Send the email with this link
+      // Use your existing email sending logic to send the redirect link
     } catch (error) {
       console.error("Error in handleSubmitManager:", error);
       if (error.response) {
@@ -275,14 +268,15 @@ const TopMenu = () => {
                       onPress={() =>
                         handleToggleActivation(manager._id, !manager.isActive)
                       }
-                      style={[
-                        styles.activationButton,
-                        {
-                          backgroundColor: manager.isActive ? "red" : "green",
-                        },
-                      ]}
+                      style={
+                        manager.isActive
+                          ? styles.deactivateButton
+                          : styles.activateButton
+                      } // Use the defined styles
                     >
-                      <Text style={styles.activationButtonText}>
+                      <Text style={styles.buttonText}>
+                        {" "}
+                        {/* Adjusted to use buttonText for consistent styling */}
                         {manager.isActive ? "Deactivate" : "Activate"}
                       </Text>
                     </TouchableOpacity>
@@ -402,25 +396,39 @@ const styles = StyleSheet.create({
   managerText: {
     fontSize: 16,
   },
-  activateButton: {
-    backgroundColor: "#4CAF50",
-    paddingVertical: 8, // Maintain the vertical padding
-    paddingHorizontal: 5, // Reduced horizontal padding for narrower buttons
+  buttonBase: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     borderRadius: 5,
     alignItems: "center",
     marginVertical: 5,
-    minWidth: 60, // Further reduced minimum width
-    maxWidth: 100, // Set a max width if needed
+    minWidth: 80,
+    maxWidth: 120,
+    elevation: 3, // Add shadow on Android
+    shadowColor: "#000", // Add shadow on iOS
+    shadowOffset: { width: 0, height: 2 }, // Shadow position
+    shadowOpacity: 0.3, // Shadow opacity
+    shadowRadius: 4, // Shadow blur
+  },
+  activateButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 5,
+    borderRadius: 5,
+    alignItems: "center",
+    marginVertical: 5,
+    minWidth: 60,
+    maxWidth: 100,
+    backgroundColor: "#4CAF50", // Green color for activate
   },
   deactivateButton: {
-    backgroundColor: "#f44336",
-    paddingVertical: 8, // Maintain the vertical padding
-    paddingHorizontal: 5, // Reduced horizontal padding for narrower buttons
+    paddingVertical: 8,
+    paddingHorizontal: 5,
     borderRadius: 5,
     alignItems: "center",
     marginVertical: 5,
-    minWidth: 60, // Further reduced minimum width
-    maxWidth: 100, // Set a max width if needed
+    minWidth: 60,
+    maxWidth: 100,
+    backgroundColor: "#f44336", // Red color for deactivate
   },
   buttonText: {
     color: "#fff",
